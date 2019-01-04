@@ -5,14 +5,13 @@ import base64
 connection = get_connection(hostname="localhost", database='report', port=8069, login='admin', password='admin', protocol='jsonrpc')
 
 model_data = connection.get_model('ir.model.data')
-#Get id of the report action
-report_model, report_id = model_data.get_object_reference('sale', 'action_report_saleorder')
+
 #get a demo data
 _, sale_order_id = model_data.get_object_reference('sale', 'sale_order_7')
 
 
-report = connection.get_model(report_model)
-res = report.render_rpc(report_id, sale_order_id, False)
+report = connection.get_model('ir.actions.report.xml')
+res = report.render_rpc([sale_order_id], 'sale.report_saleorder', False)
 
 
 
