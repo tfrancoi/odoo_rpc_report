@@ -1,4 +1,5 @@
 import base64
+import xmltodict
 
 from odoo import api, models
 from odoo.http import request, root
@@ -12,10 +13,18 @@ class RPCReport(models.Model):
             in the session and save the session on the filesystem prior to call
             wkhtmltopdf
         """
-        password = request.params['args'][2]
-        db = request.params['args'][0]
-        request.session.authenticate(db, self.env.user.login, password)
-        root.session_store.save(request.session)
+        db, password = '', ''
+        if request.params: #Case of jsonrpc
+            password = request.params['args'][2]
+            db = request.params['args'][0]
+        elif request.httprequest._cached_data: #Case of xmlrpc
+            req = xmltodict.parse(request.httprequest._cached_data)
+            password = req['methodCall']['params']['param'][2]['value']['string']
+            db = req['methodCall']['params']['param'][0]['value']['string']
+        if db and password:
+            request.session.authenticate(db, self.env.user.login, password)
+            root.session_store.save(request.session)
+
 
     @api.multi
     def render_rpc(self, res_ids, data):
